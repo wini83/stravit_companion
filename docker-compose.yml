@@ -1,0 +1,9 @@
+services:
+  stravit:
+    image: stravit-companion
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    restart: "no"

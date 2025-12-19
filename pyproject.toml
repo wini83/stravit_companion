@@ -1,0 +1,41 @@
+[project]
+name = "stravit-companion"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.3.1",
+    "loguru>=0.7.3",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "requests>=2.32.5",
+    "sqlalchemy>=2.0.45",
+    "tenacity>=9.1.2",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.12.0",
+    "commitizen>=4.10.1",
+    "isort>=7.0.0",
+    "mypy>=1.19.1",
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "ruff>=0.14.9",
+]
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N"]
+fix = true
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"
+update_changelog_on_bump = true
