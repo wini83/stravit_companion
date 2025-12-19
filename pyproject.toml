@@ -1,6 +1,6 @@
 [project]
 name = "stravit-companion"
-version = "0.1.0"
+version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -36,7 +36,11 @@ target-version = ["py312"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.2.0"
 tag_format = "v$version"
+version_scheme = "pep440"
 annotated_tag = true
+version_provider = "uv"
 update_changelog_on_bump = true
+
+[tool.setuptools]
+packages = ["stravit_companion"]
