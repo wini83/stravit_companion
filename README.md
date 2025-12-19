@@ -1,134 +1,150 @@
 # Stravit Companion
 
-Small CLI that tracks a Stravit challenge leaderboard, stores snapshots in SQLite, and sends Pushover alerts when your position or nearby gaps change.
+[![Build & Push Docker image (release)](https://github.com/wini83/stravit_companion/actions/workflows/docker-ghcr.yml/badge.svg)](https://github.com/wini83/stravit_companion/actions/workflows/docker-ghcr.yml)
 
-## Table of contents
+**Stravit Companion** is a lightweight **batch runner** (CLI) that periodically:
 
-- Features
-- Requirements
-- Quick start (local)
-- Usage
-- Configuration
-- Docker
-- Development
-- Project structure
-- Troubleshooting
-- License
+- fetches a Stravit challenge leaderboard (CSV),
+- stores snapshots in SQLite,
+- compares changes around your position,
+- sends alerts via Pushover.
 
-## Features
+🚫 This is **not** an HTTP server  
+✅ This is a **job** you run on a schedule (cron / timer)
 
-- Log in to Stravit and fetch leaderboard CSV
-- Store snapshots in SQLite
-- Compare the latest snapshots and detect changes around your position
-- Send alerts via Pushover
+The project is **designed to run in Docker**  
+→ perfect for **Raspberry Pi / always-on hosts**
+
+---
+
+## TL;DR — how to use it
+
+The user:
+
+1. downloads `docker-compose.yml`
+2. creates `.env`
+3. creates a `data/` directory
+4. runs `docker compose run`
+5. (optionally) adds a cron job
+
+That’s it.
+
+---
 
 ## Requirements
 
-- Python 3.12
-- A Stravit account and CSV export link
-- A Pushover account (token + user)
+- Docker + Docker Compose
+- Stravit account + leaderboard CSV link
+- Pushover account (token + user)
+- Linux / Raspberry Pi (ARM64 supported)
 
-## Quick start (local)
+---
 
-1. Install dependencies with uv:
+## 🐳 Running with Docker (RECOMMENDED)
+
+### 1️⃣ Prepare the directory
+
+On the host (e.g. Raspberry Pi):
 
 ```bash
-uv sync --frozen --no-dev
+mkdir -p ~/stravit-companion
+cd ~/stravit-companion
+mkdir data
 ```
 
-2. Create your environment file:
+Target structure:
+
+```text
+stravit-companion/
+├── docker-compose.yml
+├── .env
+└── data/
+```
+
+---
+
+### 2️⃣ docker-compose.yml
+
+```yaml
+services:
+  stravit:
+    image: ghcr.io/wini83/stravit_companion:latest
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    restart: "no"
+```
+
+---
+
+### 3️⃣ .env configuration
 
 ```bash
 cp .env.example .env
 ```
 
-3. Update `.env` with your credentials and challenge link.
-
-4. Run once to fetch data and persist a snapshot:
-
-```bash
-uv run python -m stravit_companion.runner --refresh
-```
-
-5. On the next run, compare snapshots and send alerts:
-
-```bash
-uv run python -m stravit_companion.runner
-```
-
-## Usage
-
-```bash
-uv run python -m stravit_companion.runner [OPTIONS]
-```
-
-Options:
-
-- `--refresh` Fetch fresh data from Stravit before comparing snapshots
-- `--dry-run` Detect alerts but do not send
-- `--debug` Enable debug logging
-- `--offset` Snapshot offset used for comparison (default: 0)
-
-## Configuration
-
-All settings are read from `.env` (see `.env.example`).
-
 | Variable | Description | Example |
-| --- | --- | --- |
-| `DB_PATH` | SQLite database path | `/data/stravit.db` |
-| `STRAVIT_BASE_URL` | Stravit base URL | `https://stravit.app` |
-| `STRAVIT_EMAIL` | Stravit login email | `you@example.com` |
-| `STRAVIT_PASSWORD` | Stravit login password | `secret` |
-| `STRAVIT_CSV_LINK` | CSV export path (relative) | `challenge/xxx/export/leaderboard/csv` |
-| `MY_NAME` | Your name as shown on the leaderboard | `Jan Kowalski` |
-| `PUSHOVER_USER` | Pushover user key | `u123...` |
-| `PUSHOVER_TOKEN` | Pushover app token | `a123...` |
-| `PUSHOVER_TITLE` | Alert title | `Stravit Companion` |
-| `PUSHOVER_PRIORITY` | Pushover priority (-2..2) | `0` |
+| --------- | ------------- | --------- |
+| DB_PATH | SQLite database path | /data/stravit.db |
+| STRAVIT_BASE_URL | Stravit base URL | `https://stravit.app` |
+| STRAVIT_EMAIL | Login email | `you@example.com` |
+| STRAVIT_PASSWORD | Password | `secret` |
+| STRAVIT_CSV_LINK | CSV export path | challenge/xxx/export/leaderboard/csv |
+| MY_NAME | Your name on the leaderboard | John Doe |
+| PUSHOVER_USER | Pushover user key | u123... |
+| PUSHOVER_TOKEN | Pushover app token | a123... |
 
-## Docker
+---
 
-Build and run using docker compose:
+### 4️⃣ First run (initialization)
 
 ```bash
-docker compose up --build
+docker compose run --rm stravit --refresh
 ```
 
-Data is persisted in `./data/stravit.db` by default.
+Database will be created at:
 
-## Development
+```text
+./data/stravit.db
+```
 
-Install dev dependencies:
+---
+
+### 5️⃣ Subsequent runs
+
+```bash
+docker compose run --rm stravit
+```
+
+---
+
+## ⏱ Scheduled execution (cron)
+
+```cron
+0 * * * * cd /home/osmc/stravit && docker compose run --rm stravit --refresh >> stravit.log 2>&1
+```
+
+---
+
+## Development (local)
 
 ```bash
 uv sync --frozen
+cp .env.example .env
+uv run python -m stravit_companion.runner --refresh
 ```
 
-Run lint/format:
+---
 
-```bash
-ruff check --fix .
-ruff format .
-black .
-```
+## Disclaimer
 
-## Project structure
+Stravit Companion is an independent, open-source project and is **not affiliated with, endorsed by, or officially connected to Stravit.app**.
 
-```text
-stravit_companion/
-  alerts/        alert detection and Pushover sender
-  client/        Stravit session and CSV fetch
-  db/            SQLAlchemy models and session
-  parsing/       CSV parsing
-  snapshots/     snapshot persistence and comparison
-  runner.py      CLI entry point
-```
+The name “Stravit” is used **solely for identification purposes** to describe compatibility with the Stravit platform.
+All trademarks, service marks, and brand names are the property of their respective owners.
 
-## Troubleshooting
-
-- If login fails, verify `STRAVIT_BASE_URL` and that the CSV link is correct.
-- If alerts look wrong, confirm your `MY_NAME` matches the leaderboard exactly.
-- If the database is empty, run once with `--refresh` to create a snapshot.
+---
 
 ## License
 

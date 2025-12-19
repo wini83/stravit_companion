@@ -1,6 +1,7 @@
 services:
   stravit:
-    image: ghcr.io/wini83/stravit_companion:latest
+    image: stravit-companion
+    build: .
     env_file:
       - .env
     volumes:
