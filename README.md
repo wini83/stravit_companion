@@ -148,4 +148,4 @@ All trademarks, service marks, and brand names are the property of their respect
 
 ## License
 
-No license specified.
+This project is licensed under the [MIT License](LICENSE).
