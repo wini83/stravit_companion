@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+.coverage
+
 .env
 stravit.db
 

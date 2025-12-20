@@ -19,3 +19,4 @@ docs/
 Dockerfile
 docker-compose.yml
 stravit.db
+.coverage
