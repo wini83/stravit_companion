@@ -1,13 +1,17 @@
 from dataclasses import dataclass
+from enum import Enum
+
+
+class AlertKind(Enum):
+    POSITION_CHANGE = "position_change"
+    GAP_CHANGE_AHEAD = "gap_change_ahead"
+    GAP_CHANGE_BEHIND = "gap_change_behind"
 
 
 @dataclass(frozen=True)
-class Alert:
-    title: str
-    message: str
-    priority: int = 0  # pushover: -2..2
-
-    @classmethod
-    def from_strings(cls, title: str, items: list[str], priority: int = 0) -> "Alert":
-        message = "\n".join(items)
-        return cls(title=title, message=message, priority=priority)
+class AlertEvent:
+    kind: AlertKind
+    name: str | None  # display_name sąsiada
+    rank: int | None  # jego pozycja
+    prev_value: float | int
+    curr_value: float | int

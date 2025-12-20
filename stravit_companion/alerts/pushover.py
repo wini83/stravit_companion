@@ -4,7 +4,7 @@ from loguru import logger
 
 from stravit_companion.config import settings
 
-from .models import Alert
+from .notification import Alert
 
 PUSHOVER_URL = "https://api.pushover.net/1/messages.json"
 

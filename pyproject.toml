@@ -62,3 +62,14 @@ update_changelog_on_bump = true
 
 [tool.setuptools]
 packages = ["stravit_companion"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.coverage.run]
+omit = [
+  "stravit_companion/alerts/pushover.py",
+  "stravit_companion/client/session.py",
+]

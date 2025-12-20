@@ -4,13 +4,17 @@ import sys
 import click
 from loguru import logger
 
-from stravit_companion.alerts.detector import build_alert_from_detected, detect_alerts
+from stravit_companion.alerts.detector import detect_alert_events
+from stravit_companion.alerts.factory import build_alert_from_events
 from stravit_companion.alerts.pushover import send
 from stravit_companion.client.session import StravitSession
 from stravit_companion.config import settings
 from stravit_companion.db.base import Base, Session, engine
 from stravit_companion.parsing.leaderboard import parse_leaderboard
-from stravit_companion.snapshots.service import load_snapshot, save_snapshot_if_changed
+from stravit_companion.snapshots.service import (
+    load_snapshot,
+    save_snapshot_if_changed,
+)
 
 
 def configure_logging(debug: bool):
@@ -41,12 +45,14 @@ def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
 
     rows = []
     saved: bool = False
+
     if refresh:
         logger.info("Fetching new data from Stravit")
         client = StravitSession()
         client.login()
         csv_text = client.fetch_csv()
         rows = parse_leaderboard(csv_text)
+
         with Session() as session:
             saved = save_snapshot_if_changed(session, rows)
             logger.info("snapshot_saved" if saved else "no_changes_detected")
@@ -65,13 +71,19 @@ def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
         logger.warning("insufficient_snapshots")
         return
 
-    alerts = detect_alerts(prev, curr, settings.my_name)
+    # 🔁 ZMIANA 1: domena → eventy
+    events = detect_alert_events(
+        prev_items=prev,
+        curr_items=curr,
+        my_name=settings.my_name,
+    )
 
-    if not alerts:
+    if not events:
         logger.info("no_alerts")
         return
 
-    alert = build_alert_from_detected(alerts)
+    # 🔁 ZMIANA 2: eventy → Alert (pushover DTO)
+    alert = build_alert_from_events(events)
     if not alert:
         return
 
