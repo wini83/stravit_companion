@@ -59,7 +59,7 @@ def detect_alerts(
         )
 
     # 2️⃣ Przed tobą (N osób)
-    for p, c in zip(prev_ahead, curr_ahead):
+    for p, c in zip(prev_ahead, curr_ahead, strict=True):
         prev_gap = p.distance - prev_me.distance
         curr_gap = c.distance - curr_me.distance
         diff = curr_gap - prev_gap
@@ -72,7 +72,7 @@ def detect_alerts(
             )
 
     # 3️⃣ Za tobą (N osób)
-    for p, c in zip(prev_behind, curr_behind):
+    for p, c in zip(prev_behind, curr_behind, strict=True):
         prev_gap = prev_me.distance - p.distance
         curr_gap = curr_me.distance - c.distance
         diff = curr_gap - prev_gap

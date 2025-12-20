@@ -27,8 +27,25 @@ dev = [
 
 [tool.ruff]
 line-length = 88
-select = ["E", "F", "I", "N"]
-fix = true
+target-version = "py312"
+
+[tool.ruff.lint]
+#select = ["E", "F", "I", "N"]
+select = [
+    "E", "F", "I", "N",     # Tier 1
+    "B", "UP", "SIM",       # Tier 2
+    "S",                    # security (bandit)
+    "RUF"]                  # ruff-specific footguns
+# ignore = [
+#   "B008",   # function call in default args – często false positive
+# ]
+ignore = [
+  "S101",  # assert (ok w testach)
+  "S311",  # random – dopuszczalne w non-crypto
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**.py" = ["B", "SIM"]
 
 [tool.black]
 line-length = 88

@@ -1,7 +1,6 @@
 import csv
 from dataclasses import dataclass
 from io import StringIO
-from typing import List
 
 
 @dataclass(frozen=True)
@@ -23,7 +22,7 @@ class LeaderboardItem:
             last_name = parts[1]
             return f"{first_name} {last_name[0]}."
 
-        # 2️⃣ Jednoczłonowe – heurystyka "pierwsza sylaba"
+        # 2️⃣ Jednoczłonowe - heurystyka "pierwsza sylaba"
         return self._first_syllable(parts[0])
 
     @staticmethod
@@ -44,8 +43,8 @@ class LeaderboardItem:
         return syllable
 
 
-def parse_leaderboard(csv_text: str) -> List[LeaderboardItem]:
-    rows: List[LeaderboardItem] = []
+def parse_leaderboard(csv_text: str) -> list[LeaderboardItem]:
+    rows: list[LeaderboardItem] = []
 
     reader = csv.DictReader(
         StringIO(csv_text),
