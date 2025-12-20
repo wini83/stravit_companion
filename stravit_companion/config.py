@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    db_path: Path = BASE_DIR / "stravit.db"
+    db_path: Path = BASE_DIR / "data" / "stravit.db"
     stravit_base_url: str
     stravit_email: str
     stravit_password: str

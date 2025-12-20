@@ -40,22 +40,23 @@ def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
     logger.info("run_started")
 
     rows = []
-
+    saved: bool = False
     if refresh:
         logger.info("Fetching new data from Stravit")
         client = StravitSession()
         client.login()
         csv_text = client.fetch_csv()
         rows = parse_leaderboard(csv_text)
-
         with Session() as session:
             saved = save_snapshot_if_changed(session, rows)
             logger.info("snapshot_saved" if saved else "no_changes_detected")
 
     with Session() as session:
         if rows:
-            curr = rows
-            prev = load_snapshot(session, offset=offset)
+            if not saved:
+                return
+            curr = load_snapshot(session, offset=0)
+            prev = load_snapshot(session, offset=1)
         else:
             curr = load_snapshot(session, offset=offset)
             prev = load_snapshot(session, offset=offset + 1)
@@ -79,7 +80,6 @@ def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
         return
 
     send(alert)
-    logger.info("run_finished")
 
 
 if __name__ == "__main__":
