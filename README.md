@@ -2,6 +2,7 @@
 
 [![Build & Push Docker image (release)](https://github.com/wini83/stravit_companion/actions/workflows/docker-ghcr.yml/badge.svg)](https://github.com/wini83/stravit_companion/actions/workflows/docker-ghcr.yml)
 [![Lint (ruff)](https://github.com/wini83/stravit_companion/actions/workflows/lint.yml/badge.svg)](https://github.com/wini83/stravit_companion/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/github/wini83/stravit_companion/graph/badge.svg?token=99LW5XQNE7)](https://codecov.io/github/wini83/stravit_companion)
 
 **Stravit Companion** is a lightweight **batch runner** (CLI) that periodically:
 
