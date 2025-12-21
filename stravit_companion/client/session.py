@@ -7,6 +7,12 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 from stravit_companion.config import settings
 
 
+class StravitFetchError(RuntimeError): ...
+
+
+class StravitAuthError(RuntimeError): ...
+
+
 class StravitSession:
     def __init__(self):
         self.session = requests.Session()
@@ -18,7 +24,7 @@ class StravitSession:
 
         m = re.search(r'name="_csrf_token"\s+value="([^"]+)"', r.text)
         if not m:
-            raise RuntimeError("CSRF token not found")
+            raise StravitAuthError("CSRF token not found")
         logger.debug("CSRF token found")
         return m.group(1)
 
@@ -50,4 +56,6 @@ class StravitSession:
         )
         r.raise_for_status()
         r.encoding = "utf-8"
+        if not r.text.strip():
+            raise StravitFetchError("CSV response is empty")
         return r.text

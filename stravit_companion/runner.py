@@ -8,10 +8,9 @@ from loguru import logger
 from stravit_companion.alerts.detector import detect_alert_events
 from stravit_companion.alerts.factory import build_alert_from_events
 from stravit_companion.alerts.pushover import send
-from stravit_companion.client.session import StravitSession
+from stravit_companion.client.fetcher import fetch_leaderboard_safe
 from stravit_companion.config import settings
 from stravit_companion.db.base import Base, Session, engine
-from stravit_companion.parsing.leaderboard import parse_leaderboard
 from stravit_companion.snapshots.service import (
     load_snapshot,
     save_snapshot_if_changed,
@@ -54,11 +53,7 @@ def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
     saved: bool = False
 
     if refresh:
-        logger.info("Fetching new data from Stravit")
-        client = StravitSession()
-        client.login()
-        csv_text = client.fetch_csv()
-        rows = parse_leaderboard(csv_text)
+        rows = fetch_leaderboard_safe()
 
         with Session() as session:
             saved = save_snapshot_if_changed(session, rows)

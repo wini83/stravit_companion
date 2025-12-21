@@ -59,3 +59,23 @@ def test_runner_dry_run_does_not_send_alert(
     assert result.exit_code == 0
     assert "dry_run_alert" in result.output
     assert sent["called"] is False
+
+
+def test_runner_no_data_skips_processing(monkeypatch, sqlite_engine, session_factory):
+    from stravit_companion import runner
+
+    monkeypatch.setattr(runner, "engine", sqlite_engine)
+    monkeypatch.setattr(runner, "Session", session_factory)
+    monkeypatch.setattr(runner, "fetch_leaderboard_safe", lambda: [])
+
+    sent = {"called": False}
+
+    def fake_send(alert):
+        sent["called"] = True
+
+    monkeypatch.setattr(runner, "send", fake_send)
+
+    result = CliRunner().invoke(runner.main, [])
+
+    assert result.exit_code == 0
+    assert sent["called"] is False
