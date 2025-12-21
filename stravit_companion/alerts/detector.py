@@ -25,56 +25,51 @@ def detect_alert_events(
     if not prev_me or not curr_me:
         return events
 
-    # 1️⃣ zmiana pozycji
+    # ==========================================================
+    # 1️⃣ CZYSTA INFORMACJA O ZMIANIE POZYCJI (FAKT)
+    # ==========================================================
     if prev_me.rank != curr_me.rank:
         events.append(
             AlertEvent(
                 kind=AlertKind.POSITION_CHANGE,
                 name=None,
-                rank=None,
+                rank=curr_me.rank,
                 prev_value=prev_me.rank,
                 curr_value=curr_me.rank,
             )
         )
-        # kluczowa decyzja: po zmianie pozycji NIE liczymy gapów
-        return events
 
-    # 2️⃣ sąsiedzi (tylko jeśli pozycja stabilna)
-    def neighbors(items: list[LeaderboardItem]) -> dict[int, LeaderboardItem]:
-        return {
-            i.rank: i
-            for i in items
-            if abs(i.rank - curr_me.rank) <= window and i.name != my_name
-        }
+    # ==========================================================
+    # 2️⃣ OKNO RYWALI Z AKTUALNEGO SNAPSHOTA
+    #    gapy liczone user-centric + delta vs prev snapshot
+    # ==========================================================
+    curr_window = [
+        i
+        for i in curr_items
+        if abs(i.rank - curr_me.rank) <= window and i.name != my_name
+    ]
 
-    prev_neighbors = neighbors(prev_items)
-    curr_neighbors = neighbors(curr_items)
+    for rival in curr_window:
+        prev_rival = prev_idx.get(rival.name)
 
-    for rank, curr in curr_neighbors.items():
-        prev = prev_neighbors.get(rank)
-        if not prev:
+        # gap = rival - me (zawsze user-centric)
+        curr_gap = rival.distance - curr_me.distance
+
+        # rywal nowy względem poprzedniego snapshotu
+        prev_gap = prev_rival.distance - prev_me.distance if prev_rival else None
+
+        # brak zmiany? nie spamujemy
+        if prev_gap is not None and prev_gap == curr_gap:
             continue
 
-        if rank < curr_me.rank:
-            # przed tobą
-            prev_gap = prev.distance - prev_me.distance
-            curr_gap = curr.distance - curr_me.distance
-            kind = AlertKind.GAP_CHANGE_AHEAD
-        else:
-            # za tobą
-            prev_gap = prev_me.distance - prev.distance
-            curr_gap = curr_me.distance - curr.distance
-            kind = AlertKind.GAP_CHANGE_BEHIND
-
-        if prev_gap != curr_gap:
-            events.append(
-                AlertEvent(
-                    kind=kind,
-                    name=curr.name,
-                    rank=curr.rank,
-                    prev_value=prev_gap,
-                    curr_value=curr_gap,
-                )
+        events.append(
+            AlertEvent(
+                kind=AlertKind.GAP_STATUS,
+                name=rival.name,
+                rank=rival.rank,
+                prev_value=prev_gap,
+                curr_value=curr_gap,
             )
+        )
 
     return events

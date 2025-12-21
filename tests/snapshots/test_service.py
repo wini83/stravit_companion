@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 
@@ -71,8 +71,8 @@ def test_load_snapshot_with_offset_returns_previous(db_session, item_factory):
         item_factory(name="Jane Doe", rank=2, distance=10.2),
     ]
 
-    ts1 = datetime.utcnow() - timedelta(hours=1)
-    ts2 = datetime.utcnow()
+    ts1 = datetime.now(UTC) - timedelta(hours=1)
+    ts2 = datetime.now(UTC)
     _insert_snapshot(db_session, items_v1, ts1)
     _insert_snapshot(db_session, items_v2, ts2)
 

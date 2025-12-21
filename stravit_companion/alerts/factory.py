@@ -4,19 +4,14 @@ from stravit_companion.alerts.renderer import render_alert
 from stravit_companion.config import settings
 
 
-def build_alert_from_events(
-    events: list[AlertEvent],
-    *,
-    title: str = settings.pushover_title,
-    priority: int = settings.pushover_priority,
-) -> Alert | None:
+def build_alert_from_events(events: list[AlertEvent]) -> Alert | None:
     if not events:
         return None
 
-    lines = [render_alert(e) for e in events]
+    message = render_alert(events)
 
-    return Alert.from_lines(
-        title=title,
-        lines=lines,
-        priority=priority,
+    return Alert(
+        title=settings.pushover_title,
+        message=message,
+        priority=settings.pushover_priority,
     )

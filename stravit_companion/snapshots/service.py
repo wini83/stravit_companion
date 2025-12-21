@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -68,7 +68,7 @@ def _insert_snapshot(
     session: Session,
     items: list[LeaderboardItem],
 ) -> None:
-    ts_new = datetime.utcnow()
+    ts_new = datetime.now(UTC)
 
     records = [
         LeaderboardSnapshot(
