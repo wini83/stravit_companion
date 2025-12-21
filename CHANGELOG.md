@@ -1,3 +1,9 @@
+## v0.4.0 (2025-12-21)
+
+### Feat
+
+- **cli**: add snapshot diff command
+
 ## v0.3.2 (2025-12-21)
 
 ### Refactor
