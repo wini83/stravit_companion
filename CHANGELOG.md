@@ -1,3 +1,10 @@
+## v0.3.1 (2025-12-21)
+
+### Refactor
+
+- **runner**: added project version to logs
+- **alerts**: unify gap status events and render multi-line alert
+
 ## v0.3.0 (2025-12-20)
 
 ### Feat
