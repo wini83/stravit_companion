@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from click.testing import CliRunner
 
@@ -39,8 +39,8 @@ def test_runner_dry_run_does_not_send_alert(
     ]
 
     with session_factory() as session:
-        ts1 = datetime.utcnow() - timedelta(hours=1)
-        ts2 = datetime.utcnow()
+        ts1 = datetime.now(UTC) - timedelta(hours=1)
+        ts2 = datetime.now(UTC)
         _insert_snapshot(session, items_prev, ts1)
         _insert_snapshot(session, items_curr, ts2)
 

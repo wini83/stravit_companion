@@ -44,7 +44,7 @@ class LeaderboardItem:
 
 
 def parse_leaderboard(csv_text: str) -> list[LeaderboardItem]:
-    rows: list[LeaderboardItem] = []
+    items: list[LeaderboardItem] = []
 
     reader = csv.DictReader(
         StringIO(csv_text),
@@ -57,7 +57,7 @@ def parse_leaderboard(csv_text: str) -> list[LeaderboardItem]:
         if not lp:
             continue  # ostatnia linia / śmieci / partial row
 
-        row = LeaderboardItem(
+        item = LeaderboardItem(
             rank=int(lp),
             name=row["nazwa"].strip(),
             distance=float(row["dystans"]),
@@ -65,6 +65,6 @@ def parse_leaderboard(csv_text: str) -> list[LeaderboardItem]:
             longest=float(row["najdluzszy"]),
             count=int(row["suma"]),
         )
-        rows.append(row)
+        items.append(item)
 
-    return rows
+    return items

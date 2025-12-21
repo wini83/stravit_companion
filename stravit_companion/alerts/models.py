@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class AlertKind(Enum):
+class AlertKind(str, Enum):
     POSITION_CHANGE = "position_change"
-    GAP_CHANGE_AHEAD = "gap_change_ahead"
-    GAP_CHANGE_BEHIND = "gap_change_behind"
+    GAP_STATUS = "gap_status"
 
 
 @dataclass(frozen=True)
@@ -13,5 +12,5 @@ class AlertEvent:
     kind: AlertKind
     name: str | None  # display_name sąsiada
     rank: int | None  # jego pozycja
-    prev_value: float | int
+    prev_value: float | int | None
     curr_value: float | int

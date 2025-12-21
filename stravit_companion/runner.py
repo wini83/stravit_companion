@@ -22,7 +22,7 @@ def configure_logging(debug: bool):
     logger.add(
         sys.stdout,
         level="DEBUG" if debug else "INFO",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+        format="{time:YYYY-MM-DD HH:mm:ss!UTC}Z | {level} | {message}",
     )
 
 
@@ -39,7 +39,7 @@ def configure_logging(debug: bool):
 )
 def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
     configure_logging(debug)
-    logger.info(f"db_path = {settings.db_path}")
+    logger.debug(f"db_path = {settings.db_path}")
     Base.metadata.create_all(engine)
     logger.info("run_started")
 
