@@ -1,5 +1,6 @@
 # runner.py
 import sys
+import tomllib
 
 import click
 from loguru import logger
@@ -26,6 +27,12 @@ def configure_logging(debug: bool):
     )
 
 
+def get_version() -> str:
+    with open("pyproject.toml", "rb") as f:
+        data = tomllib.load(f)
+    return data["project"]["version"]
+
+
 @click.command()
 @click.option("--refresh", is_flag=True, help="Fetch fresh data from Stravit")
 @click.option("--dry-run", is_flag=True, help="Detect alerts but do not send")
@@ -41,7 +48,7 @@ def main(refresh: bool, dry_run: bool, debug: bool, offset: int):
     configure_logging(debug)
     logger.debug(f"db_path = {settings.db_path}")
     Base.metadata.create_all(engine)
-    logger.info("run_started")
+    logger.info(f"run_started (v{get_version()})")
 
     rows = []
     saved: bool = False
