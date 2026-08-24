@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class AlertKind(str, Enum):
+class AlertKind(StrEnum):
     POSITION_CHANGE = "position_change"
     GAP_STATUS = "gap_status"
 
