@@ -1,3 +1,21 @@
+## v0.4.1 (2026-09-13)
+
+### Fix
+
+- use StrEnum for alert kind
+
+## v0.4.0 (2025-12-21)
+
+### Feat
+
+- **cli**: add snapshot diff command
+
+## v0.3.2 (2025-12-21)
+
+### Refactor
+
+- **client**: handle Stravit errors in fetcher
+
 ## v0.3.1 (2025-12-21)
 
 ### Refactor
