@@ -10,7 +10,7 @@ class AlertKind(StrEnum):
 @dataclass(frozen=True)
 class AlertEvent:
     kind: AlertKind
-    name: str | None  # display_name sąsiada
+    display_name: str | None
     rank: int | None  # jego pozycja
     prev_value: float | int | None
     curr_value: float | int

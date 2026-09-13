@@ -94,6 +94,7 @@ cp .env.example .env
 | STRAVIT_PASSWORD | Password | `secret` |
 | STRAVIT_CSV_LINK | CSV export path | challenge/xxx/export/leaderboard/csv |
 | MY_NAME | Your name on the leaderboard | John Doe |
+| IDENTITY_HASH_KEY | Secret key used to pseudonymize participants (keep stable) | long random secret |
 | PUSHOVER_USER | Pushover user key | u123... |
 | PUSHOVER_TOKEN | Pushover app token | a123... |
 

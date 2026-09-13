@@ -14,6 +14,7 @@ os.environ.setdefault("STRAVIT_EMAIL", "test@example.invalid")
 os.environ.setdefault("STRAVIT_PASSWORD", "not-a-real-password")
 os.environ.setdefault("STRAVIT_CSV_LINK", "challenge/example/export/leaderboard/csv")
 os.environ.setdefault("MY_NAME", "Jane Doe")
+os.environ.setdefault("IDENTITY_HASH_KEY", "test-identity-key")
 os.environ.setdefault("PUSHOVER_USER", "u123")
 os.environ.setdefault("PUSHOVER_TOKEN", "t123")
 
@@ -30,8 +31,9 @@ def item_factory():
         longest: float = 5.0,
         count: int = 1,
     ) -> LeaderboardItem:
-        return LeaderboardItem(
-            name=name,
+        return LeaderboardItem.from_raw_name(
+            name,
+            "test-identity-key",
             rank=rank,
             distance=distance,
             elevation=elevation,

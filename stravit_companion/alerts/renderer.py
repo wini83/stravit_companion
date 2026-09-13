@@ -1,24 +1,8 @@
 from stravit_companion.alerts.models import AlertEvent, AlertKind
-from stravit_companion.parsing.leaderboard import LeaderboardItem
-
-
-def _display_name(raw_name: str | None) -> str:
-    if not raw_name:
-        return ""
-
-    dummy = LeaderboardItem(
-        name=raw_name,
-        rank=0,
-        distance=0.0,
-        elevation=0,
-        longest=0.0,
-        count=0,
-    )
-    return dummy.display_name
 
 
 def _render_gap_status(event: AlertEvent) -> str:
-    name = _display_name(event.name)
+    name = event.display_name or ""
     rank = event.rank
     curr_gap = float(event.curr_value)
 

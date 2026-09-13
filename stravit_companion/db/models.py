@@ -14,8 +14,9 @@ class LeaderboardSnapshot(Base):
     # SNAPSHOT ID (wspólny dla jednego runa)
     ts: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
 
-    # IDENTYFIKATOR ZAWODNIKA
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    # Pseudonymous participant identity; raw source names are never persisted.
+    participant_id: Mapped[str] = mapped_column(String, nullable=False)
+    display_name: Mapped[str] = mapped_column(String, nullable=False)
 
     # 👇 DANE
     rank: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -25,6 +26,6 @@ class LeaderboardSnapshot(Base):
     count: Mapped[int] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (
-        Index("ix_snapshot_name", "ts", "name"),
-        UniqueConstraint("ts", "name", name="uq_snapshot_name"),
+        Index("ix_snapshot_participant_id", "ts", "participant_id"),
+        UniqueConstraint("ts", "participant_id", name="uq_snapshot_participant_id"),
     )

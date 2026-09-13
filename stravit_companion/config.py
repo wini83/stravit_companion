@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     stravit_password: str
     stravit_csv_link: str
     my_name: str
+    identity_hash_key: str
     pushover_user: str
     pushover_token: str
     pushover_title: str = "Stravit Companion"

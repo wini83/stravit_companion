@@ -2,48 +2,31 @@ import csv
 from dataclasses import dataclass
 from io import StringIO
 
+from stravit_companion.identity import abbreviate_name, participant_id
+
 
 @dataclass(frozen=True)
 class LeaderboardItem:
-    name: str
+    participant_id: str
+    display_name: str
     rank: int
     distance: float
     elevation: int
     longest: float
     count: int
 
-    @property
-    def display_name(self) -> str:
-        parts = self.name.strip().split()
-
-        # 1️⃣ Imię + nazwisko
-        if len(parts) >= 2:
-            first_name = parts[0]
-            last_name = parts[1]
-            return f"{first_name} {last_name[0]}."
-
-        # 2️⃣ Jednoczłonowe - heurystyka "pierwsza sylaba"
-        return self._first_syllable(parts[0])
-
-    @staticmethod
-    def _first_syllable(word: str) -> str:
-        """
-        Bardzo prosta heurystyka:
-        - bierzemy znaki do pierwszej samogłoski włącznie
-        - minimum 2 znaki
-        """
-        vowels = "aeiouyąęóAEIOUYĄĘÓ"
-        syllable = ""
-
-        for ch in word:
-            syllable += ch
-            if ch in vowels and len(syllable) >= 2:
-                break
-
-        return syllable
+    @classmethod
+    def from_raw_name(
+        cls, raw_name: str, identity_hash_key: str, **statistics: int | float
+    ) -> "LeaderboardItem":
+        return cls(
+            participant_id=participant_id(raw_name, identity_hash_key),
+            display_name=abbreviate_name(raw_name),
+            **statistics,
+        )
 
 
-def parse_leaderboard(csv_text: str) -> list[LeaderboardItem]:
+def parse_leaderboard(csv_text: str, identity_hash_key: str) -> list[LeaderboardItem]:
     items: list[LeaderboardItem] = []
 
     reader = csv.DictReader(
@@ -57,9 +40,10 @@ def parse_leaderboard(csv_text: str) -> list[LeaderboardItem]:
         if not lp:
             continue  # ostatnia linia / śmieci / partial row
 
-        item = LeaderboardItem(
+        item = LeaderboardItem.from_raw_name(
+            row["nazwa"],
+            identity_hash_key,
             rank=int(lp),
-            name=row["nazwa"].strip(),
             distance=float(row["dystans"]),
             elevation=int(row["przewyzszenia"]),
             longest=float(row["najdluzszy"]),
