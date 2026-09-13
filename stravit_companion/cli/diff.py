@@ -12,7 +12,8 @@ from stravit_companion.parsing.leaderboard import LeaderboardItem
 def _to_items(rows: Iterable[LeaderboardSnapshot]) -> list[LeaderboardItem]:
     return [
         LeaderboardItem(
-            name=r.name,
+            participant_id=r.participant_id,
+            display_name=r.display_name,
             rank=r.rank,
             distance=r.distance,
             elevation=r.elevation,
@@ -64,14 +65,14 @@ def diff(from_ref: str, to_ref: str) -> None:
         prev_ts, prev_items = resolve_snapshot(session, from_ref)
         curr_ts, curr_items = resolve_snapshot(session, to_ref)
 
-    prev_by_name = {i.name: i for i in prev_items}
-    curr_by_name = {i.name: i for i in curr_items}
+    prev_by_id = {i.participant_id: i for i in prev_items}
+    curr_by_id = {i.participant_id: i for i in curr_items}
 
     rows: list[list[str | int | float]] = []
 
-    for name in sorted(prev_by_name.keys() & curr_by_name.keys()):
-        p = prev_by_name[name]
-        c = curr_by_name[name]
+    for participant_id in sorted(prev_by_id.keys() & curr_by_id.keys()):
+        p = prev_by_id[participant_id]
+        c = curr_by_id[participant_id]
 
         if (
             p.rank == c.rank

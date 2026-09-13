@@ -11,7 +11,9 @@ from stravit_companion.alerts.pushover import send
 from stravit_companion.client.fetcher import fetch_leaderboard_safe
 from stravit_companion.config import settings
 from stravit_companion.db.base import Base
+from stravit_companion.db.migrations import migrate_leaderboard_snapshots
 from stravit_companion.db.session import Session, engine
+from stravit_companion.identity import participant_id
 from stravit_companion.snapshots.service import (
     load_snapshot,
     save_snapshot_if_changed,
@@ -76,6 +78,7 @@ def run(ctx):
 
     configure_logging(debug)
     logger.debug(f"db_path = {settings.db_path}")
+    migrate_leaderboard_snapshots(engine, settings.identity_hash_key)
     Base.metadata.create_all(engine)
     logger.info(f"run_started (v{get_version()})")
 
@@ -106,7 +109,7 @@ def run(ctx):
     events = detect_alert_events(
         prev_items=prev,
         curr_items=curr,
-        my_name=settings.my_name,
+        my_participant_id=participant_id(settings.my_name, settings.identity_hash_key),
     )
 
     if not events:

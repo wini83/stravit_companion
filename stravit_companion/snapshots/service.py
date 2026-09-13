@@ -8,7 +8,7 @@ from stravit_companion.parsing.leaderboard import LeaderboardItem
 
 
 def index(items: list[LeaderboardItem]) -> dict[str, LeaderboardItem]:
-    return {i.name: i for i in items}
+    return {i.participant_id: i for i in items}
 
 
 def load_snapshot(
@@ -32,7 +32,8 @@ def load_snapshot(
 
     return [
         LeaderboardItem(
-            name=r.name,
+            participant_id=r.participant_id,
+            display_name=r.display_name,
             rank=r.rank,
             distance=r.distance,
             elevation=r.elevation,
@@ -73,7 +74,8 @@ def _insert_snapshot(
     records = [
         LeaderboardSnapshot(
             ts=ts_new,
-            name=item.name,
+            participant_id=item.participant_id,
+            display_name=item.display_name,
             rank=item.rank,
             distance=item.distance,
             elevation=item.elevation,
