@@ -1,3 +1,9 @@
+## v0.4.1 (2026-09-13)
+
+### Fix
+
+- use StrEnum for alert kind
+
 ## v0.4.0 (2025-12-21)
 
 ### Feat
