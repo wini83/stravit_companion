@@ -73,7 +73,7 @@ def test_migration_preserves_history_and_removes_plaintext(tmp_path):
     }
     assert "name" not in columns
     assert {"participant_id", "display_name"} <= columns
-    backup = db_path.with_suffix(".db.pre-pseudonymization.bak")
+    backup = next(db_path.parent.glob("legacy.pre-pseudonymization-*.db"))
     assert backup.exists()
     backup_engine = create_engine(f"sqlite:///{backup}", future=True)
     assert "name" in {
@@ -105,18 +105,47 @@ def test_migration_preserves_history_and_removes_plaintext(tmp_path):
         )
 
 
-def test_failed_migration_keeps_legacy_table_and_backup(tmp_path, monkeypatch):
+def test_failed_migration_is_cleaned_up_and_can_be_retried(tmp_path, monkeypatch):
     engine, db_path = _legacy_engine(tmp_path)
     monkeypatch.setattr(
         "stravit_companion.db.migrations.participant_id", lambda *_: "same"
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception) as error:
         migrate_leaderboard_snapshots(engine, "migration-key")
+    assert "UNIQUE constraint failed" in str(error.value)
 
     columns = {
         column["name"]
         for column in inspect(engine).get_columns("leaderboard_snapshots")
     }
     assert "name" in columns
-    assert db_path.with_suffix(".db.pre-pseudonymization.bak").exists()
+    assert "leaderboard_snapshots_new" not in inspect(engine).get_table_names()
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO leaderboard_snapshots "
+                "(ts, name, rank, distance, elevation, longest, count) VALUES "
+                "(:ts, :name, :rank, :distance, :elevation, :longest, :count)"
+            ),
+            {
+                "ts": datetime.now(UTC),
+                "name": "New Participant",
+                "rank": 3,
+                "distance": 8,
+                "elevation": 80,
+                "longest": 3,
+                "count": 1,
+            },
+        )
+    monkeypatch.undo()
+
+    migrate_leaderboard_snapshots(engine, "migration-key")
+
+    backups = sorted(db_path.parent.glob("legacy.pre-pseudonymization-*.db"))
+    assert len(backups) == 2
+    with engine.connect() as connection:
+        assert (
+            connection.scalar(text("SELECT COUNT(*) FROM leaderboard_snapshots")) == 4
+        )
