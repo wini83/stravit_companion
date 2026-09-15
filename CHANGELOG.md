@@ -1,3 +1,14 @@
+## v0.5.0 (2026-09-15)
+
+### Feat
+
+- add leaderboard history queries (#22)
+- pseudonymize leaderboard snapshots (#17)
+
+### Fix
+
+- **ci**: build Docker image during release finalization (#25)
+
 ## v0.4.1 (2026-09-13)
 
 ### Fix
