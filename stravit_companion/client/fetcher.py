@@ -5,6 +5,7 @@ from stravit_companion.client.session import (
     StravitFetchError,
     StravitSession,
 )
+from stravit_companion.config import settings
 from stravit_companion.parsing.leaderboard import LeaderboardItem, parse_leaderboard
 
 
@@ -21,7 +22,7 @@ def fetch_leaderboard_safe() -> list[LeaderboardItem]:
         csv_text = client.fetch_csv()
 
         try:
-            rows = parse_leaderboard(csv_text)
+            rows = parse_leaderboard(csv_text, settings.identity_hash_key)
         except Exception as e:
             raise StravitParseError("Failed to parse leaderboard CSV") from e
 

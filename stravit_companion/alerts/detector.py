@@ -2,25 +2,25 @@ from stravit_companion.alerts.models import AlertEvent, AlertKind
 from stravit_companion.parsing.leaderboard import LeaderboardItem
 
 
-def _index_by_name(
+def _index_by_participant_id(
     items: list[LeaderboardItem],
 ) -> dict[str, LeaderboardItem]:
-    return {i.name: i for i in items}
+    return {i.participant_id: i for i in items}
 
 
 def detect_alert_events(
     prev_items: list[LeaderboardItem],
     curr_items: list[LeaderboardItem],
-    my_name: str,
+    my_participant_id: str,
     window: int = 2,
 ) -> list[AlertEvent]:
     events: list[AlertEvent] = []
 
-    prev_idx = _index_by_name(prev_items)
-    curr_idx = _index_by_name(curr_items)
+    prev_idx = _index_by_participant_id(prev_items)
+    curr_idx = _index_by_participant_id(curr_items)
 
-    prev_me = prev_idx.get(my_name)
-    curr_me = curr_idx.get(my_name)
+    prev_me = prev_idx.get(my_participant_id)
+    curr_me = curr_idx.get(my_participant_id)
 
     if not prev_me or not curr_me:
         return events
@@ -32,7 +32,7 @@ def detect_alert_events(
         events.append(
             AlertEvent(
                 kind=AlertKind.POSITION_CHANGE,
-                name=None,
+                display_name=None,
                 rank=curr_me.rank,
                 prev_value=prev_me.rank,
                 curr_value=curr_me.rank,
@@ -46,11 +46,12 @@ def detect_alert_events(
     curr_window = [
         i
         for i in curr_items
-        if abs(i.rank - curr_me.rank) <= window and i.name != my_name
+        if abs(i.rank - curr_me.rank) <= window
+        and i.participant_id != my_participant_id
     ]
 
     for rival in curr_window:
-        prev_rival = prev_idx.get(rival.name)
+        prev_rival = prev_idx.get(rival.participant_id)
 
         # gap = rival - me (zawsze user-centric)
         curr_gap = rival.distance - curr_me.distance
@@ -65,7 +66,7 @@ def detect_alert_events(
         events.append(
             AlertEvent(
                 kind=AlertKind.GAP_STATUS,
-                name=rival.name,
+                display_name=rival.display_name,
                 rank=rival.rank,
                 prev_value=prev_gap,
                 curr_value=curr_gap,

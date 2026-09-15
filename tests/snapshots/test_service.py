@@ -14,7 +14,8 @@ def _insert_snapshot(session, items, ts):
     records = [
         LeaderboardSnapshot(
             ts=ts,
-            name=item.name,
+            participant_id=item.participant_id,
+            display_name=item.display_name,
             rank=item.rank,
             distance=item.distance,
             elevation=item.elevation,

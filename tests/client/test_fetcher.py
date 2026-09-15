@@ -11,9 +11,10 @@ from stravit_companion.parsing.leaderboard import LeaderboardItem
 
 def test_fetch_leaderboard_happy_path(monkeypatch):
     fake_rows = [
-        LeaderboardItem(
+        LeaderboardItem.from_raw_name(
+            "Alice Example",
+            "test-identity-key",
             rank=1,
-            name="Alice Example",
             distance=10.0,
             elevation=100,
             longest=5.0,
@@ -27,7 +28,7 @@ def test_fetch_leaderboard_happy_path(monkeypatch):
             return "csv content"
 
     monkeypatch.setattr(fetcher, "StravitSession", FakeSession)
-    monkeypatch.setattr(fetcher, "parse_leaderboard", lambda _: fake_rows)
+    monkeypatch.setattr(fetcher, "parse_leaderboard", lambda *_: fake_rows)
 
     rows = fetch_leaderboard_safe()
 
