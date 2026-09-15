@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_call:
+    inputs:
+      version:
+        description: "Release version without the v prefix"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -16,14 +22,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.version && format('v{0}', inputs.version) || github.ref }}
 
-      - name: Extract version from tag
+      - name: Resolve version
         id: vars
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        shell: bash
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [[ -n "$INPUT_VERSION" ]]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      # 👇 REQUIRED for ARM builds
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
 
