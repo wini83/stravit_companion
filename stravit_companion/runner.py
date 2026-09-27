@@ -130,8 +130,10 @@ def run(ctx):
 # =========================
 # REGISTER EXTRA COMMANDS
 # =========================
+from stravit_companion.cli.charts import charts  # noqa: E402
 from stravit_companion.cli.diff import diff  # noqa: E402
 
+main.add_command(charts)
 main.add_command(diff)
 
 

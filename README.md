@@ -141,6 +141,30 @@ make refresh
 
 Run `make help` to see the remaining development, Docker, and snapshot commands.
 
+### Static leaderboard charts
+
+Generate a ranking-history chart from the snapshots already stored in SQLite:
+
+```bash
+make chart TOP=10 OUTPUT=ranking.png
+```
+
+The equivalent CLI command is:
+
+```bash
+uv run python -m stravit_companion.runner \
+  charts ranking-history --top 10 --output ranking.png
+```
+
+Both PNG and SVG output are supported. At least two stored snapshots are required.
+When using the published Docker image, write the chart to the mounted `/data`
+directory so it remains available on the host:
+
+```bash
+docker compose run --rm stravit \
+  charts ranking-history --top 10 --output /data/ranking.png
+```
+
 ---
 
 ## Disclaimer

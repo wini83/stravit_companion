@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lint format test coverage check run refresh dry-run diff docker-build docker-run
+.PHONY: help sync lint format test coverage check run refresh dry-run diff chart docker-build docker-run
 
 help:
 	@echo "Available targets:"
@@ -14,6 +14,7 @@ help:
 	@echo "  make refresh      Fetch a fresh snapshot and run alert detection"
 	@echo "  make dry-run      Refresh and detect alerts without sending them"
 	@echo "  make diff         Compare snapshots (FROM=latest-1 TO=latest)"
+	@echo "  make chart        Generate rank history (TOP=10 OUTPUT=ranking.png)"
 	@echo "  make docker-build Build the local Docker image"
 	@echo "  make docker-run   Run the application with Docker Compose"
 
@@ -45,6 +46,9 @@ dry-run:
 
 diff:
 	uv run python -m stravit_companion.runner diff $(or $(FROM),latest-1) $(or $(TO),latest)
+
+chart:
+	uv run python -m stravit_companion.runner charts ranking-history --top $(or $(TOP),10) --output $(or $(OUTPUT),ranking.png)
 
 docker-build:
 	docker compose -f docker-compose.dev.yml build

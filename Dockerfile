@@ -5,6 +5,8 @@ FROM python:3.14-slim
 # ---- runtime defaults ----
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    MPLBACKEND=Agg \
+    MPLCONFIGDIR=/tmp/matplotlib \
     DB_PATH=/data/stravit.db
 
 WORKDIR /app
