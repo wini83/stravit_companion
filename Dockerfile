@@ -13,7 +13,7 @@ WORKDIR /app
 
 # ---- system deps (absolute minimum) ----
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
+    && apt-get install -y --no-install-recommends ca-certificates ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # ---- uv binary ----

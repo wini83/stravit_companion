@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help sync lint format test coverage check run refresh dry-run diff chart distance-chart docker-build docker-run
+.PHONY: help sync lint format test coverage check run refresh dry-run diff chart distance-chart bar-race docker-build docker-run
 
 help:
 	@echo "Available targets:"
@@ -16,6 +16,7 @@ help:
 	@echo "  make diff         Compare snapshots (FROM=latest-1 TO=latest)"
 	@echo "  make chart        Generate rank history (TOP=10 OUTPUT=ranking.png)"
 	@echo "  make distance-chart Generate distance history (TOP=10 OUTPUT=distance.png)"
+	@echo "  make bar-race     Generate MP4 animation (TOP=10 FPS=20 DURATION=20)"
 	@echo "  make docker-build Build the local Docker image"
 	@echo "  make docker-run   Run the application with Docker Compose"
 
@@ -53,6 +54,9 @@ chart:
 
 distance-chart:
 	uv run python -m stravit_companion.runner charts distance-history --top $(or $(TOP),10) --output $(or $(OUTPUT),distance.png)
+
+bar-race:
+	uv run python -m stravit_companion.runner charts bar-race --top $(or $(TOP),10) --fps $(or $(FPS),20) --duration $(or $(DURATION),20) --output $(or $(OUTPUT),leaderboard.mp4)
 
 docker-build:
 	docker compose -f docker-compose.dev.yml build
