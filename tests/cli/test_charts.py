@@ -94,6 +94,25 @@ def test_distance_history_command_passes_options_and_reports_output(
     assert f"Chart written to {output}" in result.output
 
 
+def test_distance_history_command_reports_render_error(monkeypatch) -> None:
+    monkeypatch.setattr(charts_module, "Session", _SessionContext)
+    monkeypatch.setattr(
+        charts_module,
+        "get_leaderboard_history",
+        lambda session, *, top: LeaderboardHistory((), ()),
+    )
+    monkeypatch.setattr(
+        charts_module,
+        "render_distance_history",
+        lambda history, output: (_ for _ in ()).throw(ValueError("Not enough data")),
+    )
+
+    result = CliRunner().invoke(main, ["charts", "distance-history"])
+
+    assert result.exit_code == 1
+    assert "Error: Not enough data" in result.output
+
+
 def test_bar_race_command_passes_animation_options(monkeypatch, tmp_path) -> None:
     history = LeaderboardHistory(snapshot_times=(), participants=())
     output = tmp_path / "leaderboard.mp4"
@@ -143,3 +162,24 @@ def test_bar_race_command_passes_animation_options(monkeypatch, tmp_path) -> Non
         "duration": 12.5,
     }
     assert f"Animation written to {output}" in result.output
+
+
+def test_bar_race_command_reports_render_error(monkeypatch) -> None:
+    monkeypatch.setattr(charts_module, "Session", _SessionContext)
+    monkeypatch.setattr(
+        charts_module,
+        "get_leaderboard_history",
+        lambda session: LeaderboardHistory((), ()),
+    )
+    monkeypatch.setattr(
+        charts_module,
+        "render_bar_race",
+        lambda history, output, **options: (_ for _ in ()).throw(
+            ValueError("FFmpeg is required")
+        ),
+    )
+
+    result = CliRunner().invoke(main, ["charts", "bar-race"])
+
+    assert result.exit_code == 1
+    assert "Error: FFmpeg is required" in result.output

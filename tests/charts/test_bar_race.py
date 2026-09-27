@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -54,6 +55,21 @@ def test_history_frame_contains_wide_cumulative_values() -> None:
     assert frame["Jane D."].tolist() == pytest.approx([15.0, 16.0])
 
 
+def test_history_frame_disambiguates_duplicate_display_names() -> None:
+    history = _history()
+    duplicate_names = LeaderboardHistory(
+        snapshot_times=history.snapshot_times,
+        participants=tuple(
+            replace(participant, display_name="Same N.")
+            for participant in history.participants
+        ),
+    )
+
+    frame = _history_frame(duplicate_names)
+
+    assert list(frame.columns) == ["Same N. (1)", "Same N. (2)"]
+
+
 def test_animation_timing_preserves_requested_fps() -> None:
     steps, period_length = _animation_timing(periods=5, fps=20, duration=2)
 
@@ -105,6 +121,43 @@ def test_render_bar_race_reports_missing_ffmpeg(monkeypatch, tmp_path) -> None:
         render_bar_race(_history(), tmp_path / "leaderboard.mp4")
 
 
+def test_render_bar_race_wraps_library_failure(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        bar_race_module.shutil,
+        "which",
+        lambda executable: "/usr/bin/ffmpeg",
+    )
+    monkeypatch.setattr(
+        bar_race_module.bcr,
+        "bar_chart_race",
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("encoding failed")),
+    )
+
+    with pytest.raises(ValueError, match=r"Unable to generate.*encoding failed"):
+        render_bar_race(_history(), tmp_path / "leaderboard.mp4")
+
+
 def test_render_bar_race_rejects_non_mp4_output(tmp_path) -> None:
     with pytest.raises(ValueError, match=r"\.mp4 extension"):
         render_bar_race(_history(), tmp_path / "leaderboard.gif")
+
+
+@pytest.mark.parametrize(
+    ("history", "options", "message"),
+    [
+        (LeaderboardHistory((), ()), {}, "At least two leaderboard snapshots"),
+        (
+            LeaderboardHistory(_history().snapshot_times, ()),
+            {},
+            "At least one participant",
+        ),
+        (_history(), {"top": 0}, "top must be at least 1"),
+        (_history(), {"fps": 0}, "fps must be at least 1"),
+        (_history(), {"duration": 0}, "duration must be greater than 0"),
+    ],
+)
+def test_render_bar_race_rejects_invalid_options(
+    history, options, message, tmp_path
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        render_bar_race(history, tmp_path / "leaderboard.mp4", **options)
