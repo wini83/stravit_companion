@@ -171,6 +171,30 @@ docker compose run --rm stravit \
   charts ranking-history --top 10 --output /data/ranking.png
 ```
 
+### Animated leaderboard
+
+Generate an MP4 bar chart race showing cumulative distance and changing leaders.
+The animation uses `bar-chart-race` with FFmpeg encoding:
+
+```bash
+make bar-race TOP=10 FPS=20 DURATION=20 OUTPUT=leaderboard.mp4
+```
+
+The equivalent Docker command writes the video to the mounted data directory:
+
+```bash
+docker compose run --rm stravit \
+  charts bar-race \
+  --top 10 \
+  --fps 20 \
+  --duration 20 \
+  --output /data/leaderboard.mp4
+```
+
+`--duration` controls the total video length in seconds and `--fps` controls its
+frame rate. FFmpeg is included in the published Docker image. For local execution,
+install FFmpeg and ensure its `ffmpeg` executable is available on `PATH`.
+
 ---
 
 ## Disclaimer
