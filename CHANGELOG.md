@@ -1,3 +1,9 @@
+## v0.6.0 (2026-09-27)
+
+### Feat
+
+- **cli**: add static ranking history charts (#34)
+
 ## v0.5.1 (2026-09-27)
 
 ### Fix
