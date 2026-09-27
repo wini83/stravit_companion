@@ -133,10 +133,13 @@ docker compose run --rm stravit
 ## Development (local)
 
 ```bash
-uv sync --frozen
 cp .env.example .env
-uv run python -m stravit_companion.runner --refresh
+make sync
+make check
+make refresh
 ```
+
+Run `make help` to see the remaining development, Docker, and snapshot commands.
 
 ---
 
