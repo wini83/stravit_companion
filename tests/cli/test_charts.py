@@ -60,3 +60,35 @@ def test_ranking_history_command_reports_insufficient_data(monkeypatch) -> None:
 
     assert result.exit_code == 1
     assert "Error: Not enough data" in result.output
+
+
+def test_distance_history_command_passes_options_and_reports_output(
+    monkeypatch, tmp_path
+) -> None:
+    history = LeaderboardHistory(snapshot_times=(), participants=())
+    output = tmp_path / "distance.png"
+    calls = {}
+
+    monkeypatch.setattr(charts_module, "Session", _SessionContext)
+    monkeypatch.setattr(
+        charts_module,
+        "get_leaderboard_history",
+        lambda session, *, top: calls.update(top=top) or history,
+    )
+    monkeypatch.setattr(
+        charts_module,
+        "render_distance_history",
+        lambda received_history, received_output: (
+            calls.update(history=received_history, output=received_output)
+            or received_output
+        ),
+    )
+
+    result = CliRunner().invoke(
+        main,
+        ["charts", "distance-history", "--top", "5", "--output", str(output)],
+    )
+
+    assert result.exit_code == 0
+    assert calls == {"top": 5, "history": history, "output": output}
+    assert f"Chart written to {output}" in result.output
