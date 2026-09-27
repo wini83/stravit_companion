@@ -10,6 +10,7 @@ wheels/
 .venv
 
 .coverage
+coverage.xml
 
 .env
 stravit.db
