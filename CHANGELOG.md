@@ -1,4 +1,8 @@
-## Unreleased
+## v0.5.1 (2026-09-27)
+
+### Fix
+
+- **ci**: run tests with repository on import path
 
 ## v0.5.0 (2026-09-15)
 
