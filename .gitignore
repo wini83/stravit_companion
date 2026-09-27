@@ -12,6 +12,12 @@ wheels/
 .coverage
 coverage.xml
 
+# Default chart outputs
+/ranking.png
+/ranking.svg
+/distance.png
+/distance.svg
+
 .env
 stravit.db
 
