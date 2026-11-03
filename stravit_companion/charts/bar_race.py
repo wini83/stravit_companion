@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
+import tempfile
 import warnings
 from collections import Counter
 from pathlib import Path
@@ -10,6 +12,7 @@ from pathlib import Path
 import bar_chart_race as bcr
 import matplotlib as mpl
 import pandas as pd
+import numpy as np
 
 from stravit_companion.history import LeaderboardHistory
 
@@ -19,11 +22,15 @@ def render_bar_race(
     output: Path,
     *,
     top: int = 10,
-    fps: int = 20,
+    fps: int = 30,
     duration: float = 20.0,
+    intro_seconds: float = 3.0,
+    outro_seconds: float = 4.0,
 ) -> Path:
     """Render an MP4 distance race using bar-chart-race and FFmpeg."""
     _validate_options(history, output, top=top, fps=fps, duration=duration)
+    if intro_seconds < 0 or outro_seconds < 0:
+        raise ValueError("intro/outro seconds must not be negative")
     ffmpeg_path = shutil.which("ffmpeg")
     if ffmpeg_path is None:
         raise ValueError(
@@ -32,15 +39,27 @@ def render_bar_race(
 
     frame = _history_frame(history)
     frame = _sample_periods(frame, fps=fps, duration=duration)
-    steps_per_period, period_length = _animation_timing(
-        periods=len(frame),
-        fps=fps,
-        duration=duration,
-    )
+    frame = _ease_frames(frame, fps=fps, duration=duration)
+    steps_per_period = 1
+    period_length = 1000 / fps
     output.parent.mkdir(parents=True, exist_ok=True)
 
     try:
-        with (
+        with tempfile.TemporaryDirectory() as temp_dir:
+            raw_output = Path(temp_dir) / "animation.mp4"
+            _render_animation(
+                frame, raw_output, ffmpeg_path, top, steps_per_period, period_length
+            )
+            _pad_video(
+                raw_output, output, ffmpeg_path, intro_seconds, outro_seconds
+            )
+    except Exception as exc:
+        raise ValueError(f"Unable to generate {output} with FFmpeg: {exc}") from exc
+    return output
+
+
+def _render_animation(frame, output, ffmpeg_path, top, steps_per_period, period_length):
+    with (
             mpl.rc_context(
                 {
                     "animation.ffmpeg_path": ffmpeg_path,
@@ -92,9 +111,38 @@ def render_bar_race(
                 bar_kwargs={"alpha": 0.9},
                 filter_column_colors=True,
             )
-    except Exception as exc:
-        raise ValueError(f"Unable to generate {output} with FFmpeg: {exc}") from exc
-    return output
+
+
+def _pad_video(source: Path, output: Path, ffmpeg: str, intro: float, outro: float) -> None:
+    """Hold the first and last complete frames without altering the timeline."""
+    if intro == 0 and outro == 0:
+        source.replace(output)
+        return
+    subprocess.run(
+        [ffmpeg, "-y", "-i", str(source), "-vf",
+         f"tpad=start_duration={intro}:stop_duration={outro}:stop_mode=clone:start_mode=clone",
+         "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+         "-movflags", "+faststart", str(output)],
+        check=True, capture_output=True, text=True,
+    )
+
+
+def _ease_frames(frame: pd.DataFrame, *, fps: int, duration: float) -> pd.DataFrame:
+    """Resample snapshot transitions with smoothstep easing, preserving actual values."""
+    transitions = len(frame) - 1
+    total_steps = max(transitions, round(duration * fps))
+    positions = np.linspace(0, transitions, total_steps + 1)
+    values = frame.to_numpy(dtype=float)
+    times = frame.index.asi8
+    result = []
+    timestamps = []
+    for position in positions:
+        left = min(int(position), transitions - 1)
+        fraction = position - left
+        eased = fraction * fraction * (3 - 2 * fraction)
+        result.append(values[left] + (values[left + 1] - values[left]) * eased)
+        timestamps.append(int(times[left] + (times[left + 1] - times[left]) * eased))
+    return pd.DataFrame(result, columns=frame.columns, index=pd.to_datetime(timestamps))
 
 
 def _history_frame(history: LeaderboardHistory) -> pd.DataFrame:
