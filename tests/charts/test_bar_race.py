@@ -7,8 +7,8 @@ import pytest
 from stravit_companion.charts import bar_race as bar_race_module
 from stravit_companion.charts.bar_race import (
     _animation_timing,
-    _history_frame,
     _ease_frames,
+    _history_frame,
     _sample_periods,
     render_bar_race,
 )
@@ -107,7 +107,11 @@ def test_render_bar_race_calls_library_with_reordering(monkeypatch, tmp_path) ->
         output.write_bytes(b"video")
 
     monkeypatch.setattr(bar_race_module.bcr, "bar_chart_race", render)
-    monkeypatch.setattr(bar_race_module.subprocess, "run", lambda *args, **kwargs: output.write_bytes(b"video"))
+    monkeypatch.setattr(
+        bar_race_module.subprocess,
+        "run",
+        lambda *args, **kwargs: output.write_bytes(b"video"),
+    )
 
     assert render_bar_race(_history(), output, top=1, fps=10, duration=2) == output
     assert calls["n_bars"] == 1
@@ -180,7 +184,9 @@ def test_pad_video_uses_first_and_last_frame(monkeypatch, tmp_path) -> None:
     source = tmp_path / "raw.mp4"
     output = tmp_path / "final.mp4"
     calls = []
-    monkeypatch.setattr(bar_race_module.subprocess, "run", lambda args, **kwargs: calls.append(args))
+    monkeypatch.setattr(
+        bar_race_module.subprocess, "run", lambda args, **kwargs: calls.append(args)
+    )
     bar_race_module._pad_video(source, output, "/usr/bin/ffmpeg", 3, 4)
     assert "start_duration=3" in calls[0][calls[0].index("-vf") + 1]
     assert "stop_duration=4" in calls[0][calls[0].index("-vf") + 1]
