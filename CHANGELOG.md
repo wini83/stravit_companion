@@ -1,3 +1,9 @@
+## v0.6.1 (2026-11-03)
+
+### Fix
+
+- smooth bar-race timeline and add intro/outro holds (#50)
+
 ## v0.6.0 (2026-09-27)
 
 ### Feat
