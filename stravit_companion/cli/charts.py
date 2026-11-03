@@ -94,8 +94,12 @@ def distance_history(top: int, output: Path) -> None:
     show_default=True,
     help="Animation duration in seconds, excluding intro/outro holds.",
 )
-@click.option("--intro-seconds", type=click.FloatRange(min=0), default=3.0, show_default=True)
-@click.option("--outro-seconds", type=click.FloatRange(min=0), default=4.0, show_default=True)
+@click.option(
+    "--intro-seconds", type=click.FloatRange(min=0), default=3.0, show_default=True
+)
+@click.option(
+    "--outro-seconds", type=click.FloatRange(min=0), default=4.0, show_default=True
+)
 @click.option(
     "--output",
     type=click.Path(path_type=Path, dir_okay=False),
