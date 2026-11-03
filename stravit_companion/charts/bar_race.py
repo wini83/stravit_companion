@@ -11,8 +11,8 @@ from pathlib import Path
 
 import bar_chart_race as bcr
 import matplotlib as mpl
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from stravit_companion.history import LeaderboardHistory
 
@@ -113,22 +113,42 @@ def _render_animation(frame, output, ffmpeg_path, top, steps_per_period, period_
             )
 
 
-def _pad_video(source: Path, output: Path, ffmpeg: str, intro: float, outro: float) -> None:
+def _pad_video(
+    source: Path, output: Path, ffmpeg: str, intro: float, outro: float
+) -> None:
     """Hold the first and last complete frames without altering the timeline."""
     if intro == 0 and outro == 0:
         source.replace(output)
         return
-    subprocess.run(
-        [ffmpeg, "-y", "-i", str(source), "-vf",
-         f"tpad=start_duration={intro}:stop_duration={outro}:stop_mode=clone:start_mode=clone",
-         "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
-         "-movflags", "+faststart", str(output)],
-        check=True, capture_output=True, text=True,
+    filter_expression = (
+        f"tpad=start_duration={intro}:stop_duration={outro}:"
+        "stop_mode=clone:start_mode=clone"
+    )
+    # FFmpeg executable is resolved via shutil.which; arguments are not shell-expanded.
+    subprocess.run(  # noqa: S603
+        [
+            ffmpeg,
+            "-y",
+            "-i",
+            str(source),
+            "-vf",
+            filter_expression,
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
 
-
 def _ease_frames(frame: pd.DataFrame, *, fps: int, duration: float) -> pd.DataFrame:
-    """Resample snapshot transitions with smoothstep easing, preserving actual values."""
+    """Resample snapshot transitions using smoothstep easing."""
     transitions = len(frame) - 1
     total_steps = max(transitions, round(duration * fps))
     positions = np.linspace(0, transitions, total_steps + 1)
