@@ -83,7 +83,7 @@ def distance_history(top: int, output: Path) -> None:
 @click.option(
     "--fps",
     type=click.IntRange(min=1, max=60),
-    default=20,
+    default=30,
     show_default=True,
     help="Video frames per second.",
 )
@@ -92,8 +92,10 @@ def distance_history(top: int, output: Path) -> None:
     type=click.FloatRange(min=0, min_open=True),
     default=20.0,
     show_default=True,
-    help="Total video duration in seconds.",
+    help="Animation duration in seconds, excluding intro/outro holds.",
 )
+@click.option("--intro-seconds", type=click.FloatRange(min=0), default=3.0, show_default=True)
+@click.option("--outro-seconds", type=click.FloatRange(min=0), default=4.0, show_default=True)
 @click.option(
     "--output",
     type=click.Path(path_type=Path, dir_okay=False),
@@ -101,7 +103,10 @@ def distance_history(top: int, output: Path) -> None:
     show_default=True,
     help="Destination MP4 file.",
 )
-def bar_race(top: int, fps: int, duration: float, output: Path) -> None:
+def bar_race(
+    top: int, fps: int, duration: float,
+    intro_seconds: float, outro_seconds: float, output: Path,
+) -> None:
     """Animate the cumulative-distance leaderboard over time."""
     with Session() as session:
         history = get_leaderboard_history(session)
@@ -113,6 +118,8 @@ def bar_race(top: int, fps: int, duration: float, output: Path) -> None:
             top=top,
             fps=fps,
             duration=duration,
+            intro_seconds=intro_seconds,
+            outro_seconds=outro_seconds,
         )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
