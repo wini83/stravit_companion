@@ -1,3 +1,4 @@
+import errno
 from dataclasses import replace
 from datetime import datetime, timedelta
 
@@ -118,7 +119,19 @@ def test_render_bar_race_calls_library_with_reordering(monkeypatch, tmp_path) ->
     assert calls["fixed_order"] is False
     assert calls["interpolate_period"] is True
     assert calls["filename"].endswith("animation.mp4")
-    assert calls["steps_per_period"] == 1
+    assert calls["steps_per_period"] > 1
+    assert 1000 / calls["period_length"] * calls["steps_per_period"] == pytest.approx(
+        10
+    )
+    # Exercise the real library's rank interpolation with the actual render inputs.
+    _, ranks = bar_race_module.bcr.prepare_wide_data(
+        calls["df"],
+        n_bars=2,
+        steps_per_period=calls["steps_per_period"],
+        interpolate_period=calls["interpolate_period"],
+    )
+    assert ((ranks["Alice E."] > 1) & (ranks["Alice E."] < 2)).any()
+    assert ranks["Alice E."].diff().abs().max() < 1
 
 
 def test_render_bar_race_reports_missing_ffmpeg(monkeypatch, tmp_path) -> None:
@@ -190,3 +203,34 @@ def test_pad_video_uses_first_and_last_frame(monkeypatch, tmp_path) -> None:
     bar_race_module._pad_video(source, output, "/usr/bin/ffmpeg", 3, 4)
     assert "start_duration=3" in calls[0][calls[0].index("-vf") + 1]
     assert "stop_duration=4" in calls[0][calls[0].index("-vf") + 1]
+
+
+@pytest.mark.parametrize("unit", ["s", "ms", "us", "ns"])
+def test_ease_frames_preserves_dates_regardless_of_index_unit(unit) -> None:
+    frame = _history_frame(_history())
+    frame.index = frame.index.as_unit(unit)
+
+    eased = _ease_frames(frame, fps=10, duration=1)
+
+    assert eased.index[0] == frame.index[0]
+    assert eased.index[-1] == frame.index[-1]
+    assert eased.index[5] == frame.index[0] + timedelta(minutes=30)
+    assert eased.index.is_monotonic_increasing
+
+
+def test_pad_video_without_holds_moves_across_filesystems(
+    monkeypatch, tmp_path
+) -> None:
+    source = tmp_path / "raw.mp4"
+    output = tmp_path / "final.mp4"
+    source.write_bytes(b"video")
+    output.write_bytes(b"old video")
+
+    def cross_device_rename(*args, **kwargs):
+        raise OSError(errno.EXDEV, "Invalid cross-device link")
+
+    monkeypatch.setattr(bar_race_module.shutil.os, "rename", cross_device_rename)
+    bar_race_module._pad_video(source, output, "/usr/bin/ffmpeg", 0, 0)
+
+    assert output.read_bytes() == b"video"
+    assert not source.exists()
