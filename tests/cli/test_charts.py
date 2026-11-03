@@ -125,13 +125,18 @@ def test_bar_race_command_passes_animation_options(monkeypatch, tmp_path) -> Non
         lambda session: history,
     )
 
-    def render(received_history, received_output, *, top, fps, duration):
+    def render(
+        received_history, received_output, *, top, fps, duration,
+        intro_seconds, outro_seconds,
+    ):
         calls.update(
             history=received_history,
             output=received_output,
             top=top,
             fps=fps,
             duration=duration,
+            intro_seconds=intro_seconds,
+            outro_seconds=outro_seconds,
         )
         return received_output
 
@@ -160,6 +165,8 @@ def test_bar_race_command_passes_animation_options(monkeypatch, tmp_path) -> Non
         "top": 5,
         "fps": 24,
         "duration": 12.5,
+        "intro_seconds": 3.0,
+        "outro_seconds": 4.0,
     }
     assert f"Animation written to {output}" in result.output
 

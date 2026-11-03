@@ -1,3 +1,4 @@
+import errno
 from dataclasses import replace
 from datetime import datetime, timedelta
 
@@ -7,6 +8,7 @@ import pytest
 from stravit_companion.charts import bar_race as bar_race_module
 from stravit_companion.charts.bar_race import (
     _animation_timing,
+    _ease_frames,
     _history_frame,
     _sample_periods,
     render_bar_race,
@@ -106,12 +108,30 @@ def test_render_bar_race_calls_library_with_reordering(monkeypatch, tmp_path) ->
         output.write_bytes(b"video")
 
     monkeypatch.setattr(bar_race_module.bcr, "bar_chart_race", render)
+    monkeypatch.setattr(
+        bar_race_module.subprocess,
+        "run",
+        lambda *args, **kwargs: output.write_bytes(b"video"),
+    )
 
     assert render_bar_race(_history(), output, top=1, fps=10, duration=2) == output
     assert calls["n_bars"] == 1
     assert calls["fixed_order"] is False
     assert calls["interpolate_period"] is True
-    assert calls["filename"] == str(output)
+    assert calls["filename"].endswith("animation.mp4")
+    assert calls["steps_per_period"] > 1
+    assert 1000 / calls["period_length"] * calls["steps_per_period"] == pytest.approx(
+        10
+    )
+    # Exercise the real library's rank interpolation with the actual render inputs.
+    _, ranks = bar_race_module.bcr.prepare_wide_data(
+        calls["df"],
+        n_bars=2,
+        steps_per_period=calls["steps_per_period"],
+        interpolate_period=calls["interpolate_period"],
+    )
+    assert ((ranks["Alice E."] > 1) & (ranks["Alice E."] < 2)).any()
+    assert ranks["Alice E."].diff().abs().max() < 1
 
 
 def test_render_bar_race_reports_missing_ffmpeg(monkeypatch, tmp_path) -> None:
@@ -161,3 +181,56 @@ def test_render_bar_race_rejects_invalid_options(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         render_bar_race(history, tmp_path / "leaderboard.mp4", **options)
+
+
+def test_ease_frames_preserves_endpoints_and_slows_transition_edges() -> None:
+    frame = _history_frame(_history())
+    eased = _ease_frames(frame, fps=10, duration=1)
+    assert len(eased) == 11
+    assert eased.iloc[0].tolist() == pytest.approx(frame.iloc[0].tolist())
+    assert eased.iloc[-1].tolist() == pytest.approx(frame.iloc[-1].tolist())
+    assert eased.iloc[1]["Alice E."] - eased.iloc[0]["Alice E."] < 1
+    assert eased.iloc[5]["Alice E."] == pytest.approx(15)
+
+
+def test_pad_video_uses_first_and_last_frame(monkeypatch, tmp_path) -> None:
+    source = tmp_path / "raw.mp4"
+    output = tmp_path / "final.mp4"
+    calls = []
+    monkeypatch.setattr(
+        bar_race_module.subprocess, "run", lambda args, **kwargs: calls.append(args)
+    )
+    bar_race_module._pad_video(source, output, "/usr/bin/ffmpeg", 3, 4)
+    assert "start_duration=3" in calls[0][calls[0].index("-vf") + 1]
+    assert "stop_duration=4" in calls[0][calls[0].index("-vf") + 1]
+
+
+@pytest.mark.parametrize("unit", ["s", "ms", "us", "ns"])
+def test_ease_frames_preserves_dates_regardless_of_index_unit(unit) -> None:
+    frame = _history_frame(_history())
+    frame.index = frame.index.as_unit(unit)
+
+    eased = _ease_frames(frame, fps=10, duration=1)
+
+    assert eased.index[0] == frame.index[0]
+    assert eased.index[-1] == frame.index[-1]
+    assert eased.index[5] == frame.index[0] + timedelta(minutes=30)
+    assert eased.index.is_monotonic_increasing
+
+
+def test_pad_video_without_holds_moves_across_filesystems(
+    monkeypatch, tmp_path
+) -> None:
+    source = tmp_path / "raw.mp4"
+    output = tmp_path / "final.mp4"
+    source.write_bytes(b"video")
+    output.write_bytes(b"old video")
+
+    def cross_device_rename(*args, **kwargs):
+        raise OSError(errno.EXDEV, "Invalid cross-device link")
+
+    monkeypatch.setattr(bar_race_module.shutil.os, "rename", cross_device_rename)
+    bar_race_module._pad_video(source, output, "/usr/bin/ffmpeg", 0, 0)
+
+    assert output.read_bytes() == b"video"
+    assert not source.exists()
