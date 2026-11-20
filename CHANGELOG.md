@@ -1,3 +1,9 @@
+## v0.6.2 (2026-11-19)
+
+### Fix
+
+- bump the app-stack group with 3 updates (#55)
+
 ## v0.6.1 (2026-11-03)
 
 ### Fix
