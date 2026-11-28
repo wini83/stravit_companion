@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import warnings
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
 
 import bar_chart_race as bcr
@@ -26,6 +27,7 @@ def render_bar_race(
     duration: float = 20.0,
     intro_seconds: float = 3.0,
     outro_seconds: float = 4.0,
+    on_stage: Callable[[str], None] | None = None,
 ) -> Path:
     """Render an MP4 distance race using bar-chart-race and FFmpeg."""
     _validate_options(history, output, top=top, fps=fps, duration=duration)
@@ -37,6 +39,8 @@ def render_bar_race(
             "FFmpeg is required to generate MP4 files; install ffmpeg and retry"
         )
 
+    if on_stage is not None:
+        on_stage("Preparing animation data…")
     frame = _history_frame(history)
     frame = _sample_periods(frame, fps=fps, duration=duration)
     # Keep intermediate frames for the library to interpolate bar positions too.
@@ -50,9 +54,17 @@ def render_bar_race(
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
             raw_output = Path(temp_dir) / "animation.mp4"
+            if on_stage is not None:
+                on_stage("Rendering animation…")
             _render_animation(
                 frame, raw_output, ffmpeg_path, top, steps_per_period, period_length
             )
+            if on_stage is not None:
+                on_stage(
+                    "Adding intro/outro…"
+                    if intro_seconds or outro_seconds
+                    else "Saving animation…"
+                )
             _pad_video(raw_output, output, ffmpeg_path, intro_seconds, outro_seconds)
     except Exception as exc:
         raise ValueError(f"Unable to generate {output} with FFmpeg: {exc}") from exc

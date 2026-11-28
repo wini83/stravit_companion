@@ -126,9 +126,18 @@ def test_bar_race_command_passes_animation_options(monkeypatch, tmp_path) -> Non
     )
 
     def render(
-        received_history, received_output, *, top, fps, duration,
-        intro_seconds, outro_seconds,
+        received_history,
+        received_output,
+        *,
+        top,
+        fps,
+        duration,
+        intro_seconds,
+        outro_seconds,
+        on_stage,
     ):
+        on_stage("Rendering animation…")
+        on_stage("Adding intro/outro…")
         calls.update(
             history=received_history,
             output=received_output,
@@ -168,7 +177,14 @@ def test_bar_race_command_passes_animation_options(monkeypatch, tmp_path) -> Non
         "intro_seconds": 3.0,
         "outro_seconds": 4.0,
     }
-    assert f"Animation written to {output}" in result.output
+    assert f"Animation written to {output}" in result.stdout
+    assert "elapsed: " in result.stdout
+    assert result.stderr.splitlines() == [
+        "Loading leaderboard history…",
+        "Rendering animation…",
+        "Adding intro/outro…",
+    ]
+    assert "\x1b[" not in result.output
 
 
 def test_bar_race_command_reports_render_error(monkeypatch) -> None:
@@ -189,4 +205,6 @@ def test_bar_race_command_reports_render_error(monkeypatch) -> None:
     result = CliRunner().invoke(main, ["charts", "bar-race"])
 
     assert result.exit_code == 1
-    assert "Error: FFmpeg is required" in result.output
+    assert "Error: FFmpeg is required" in result.stderr
+    assert "Animation written" not in result.output
+    assert "\x1b[" not in result.output
