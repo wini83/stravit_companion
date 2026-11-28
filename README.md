@@ -195,6 +195,12 @@ docker compose run --rm stravit \
 frame rate. FFmpeg is included in the published Docker image. For local execution,
 install FFmpeg and ensure its `ffmpeg` executable is available on `PATH`.
 
+During generation, an interactive terminal shows a spinner with the current stage
+and its elapsed time. Without a terminal (for example, cron or redirected output),
+each stage is printed once to stderr without animation. The final output path and
+total generation time are printed to stdout. Generation may take several minutes;
+no percentage or completion estimate is shown.
+
 ---
 
 ## Disclaimer

@@ -96,6 +96,7 @@ def test_sample_periods_bounds_video_duration_and_keeps_endpoints() -> None:
 
 def test_render_bar_race_calls_library_with_reordering(monkeypatch, tmp_path) -> None:
     calls = {}
+    stages = []
     output = tmp_path / "leaderboard.mp4"
     monkeypatch.setattr(
         bar_race_module.shutil,
@@ -114,7 +115,17 @@ def test_render_bar_race_calls_library_with_reordering(monkeypatch, tmp_path) ->
         lambda *args, **kwargs: output.write_bytes(b"video"),
     )
 
-    assert render_bar_race(_history(), output, top=1, fps=10, duration=2) == output
+    assert (
+        render_bar_race(
+            _history(), output, top=1, fps=10, duration=2, on_stage=stages.append
+        )
+        == output
+    )
+    assert stages == [
+        "Preparing animation data…",
+        "Rendering animation…",
+        "Adding intro/outro…",
+    ]
     assert calls["n_bars"] == 1
     assert calls["fixed_order"] is False
     assert calls["interpolate_period"] is True

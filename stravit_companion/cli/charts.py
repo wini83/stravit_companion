@@ -1,4 +1,5 @@
 from pathlib import Path
+from time import perf_counter
 
 import click
 
@@ -7,6 +8,7 @@ from stravit_companion.charts import (
     render_distance_history,
     render_ranking_history,
 )
+from stravit_companion.cli.progress import animation_progress, format_elapsed
 from stravit_companion.db.session import Session
 from stravit_companion.history import get_leaderboard_history
 
@@ -108,24 +110,33 @@ def distance_history(top: int, output: Path) -> None:
     help="Destination MP4 file.",
 )
 def bar_race(
-    top: int, fps: int, duration: float,
-    intro_seconds: float, outro_seconds: float, output: Path,
+    top: int,
+    fps: int,
+    duration: float,
+    intro_seconds: float,
+    outro_seconds: float,
+    output: Path,
 ) -> None:
     """Animate the cumulative-distance leaderboard over time."""
-    with Session() as session:
-        history = get_leaderboard_history(session)
-
+    started = perf_counter()
     try:
-        written_path = render_bar_race(
-            history,
-            output,
-            top=top,
-            fps=fps,
-            duration=duration,
-            intro_seconds=intro_seconds,
-            outro_seconds=outro_seconds,
-        )
+        with animation_progress() as report_stage:
+            report_stage("Loading leaderboard history…")
+            with Session() as session:
+                history = get_leaderboard_history(session)
+
+            written_path = render_bar_race(
+                history,
+                output,
+                top=top,
+                fps=fps,
+                duration=duration,
+                intro_seconds=intro_seconds,
+                outro_seconds=outro_seconds,
+                on_stage=report_stage,
+            )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 
-    click.echo(f"Animation written to {written_path}")
+    elapsed = format_elapsed(perf_counter() - started)
+    click.echo(f"Animation written to {written_path} (elapsed: {elapsed})")
