@@ -1,3 +1,9 @@
+## v0.7.0 (2026-11-28)
+
+### Feat
+
+- show bar-race generation stages and elapsed time (#60)
+
 ## v0.6.2 (2026-11-19)
 
 ### Fix
